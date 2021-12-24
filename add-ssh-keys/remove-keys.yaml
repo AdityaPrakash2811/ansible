@@ -1,0 +1,14 @@
+- hosts: servers
+  gather_facts: false
+  tasks:
+    - name: Assign Port
+      set_fact:
+        ansible_port: 10022
+
+    - name: Add keys
+      authorized_key:
+        user: ec2-user
+        key: '{{ item }}'
+        state: absent
+      with_file:
+        - <path_to_stored_keys>

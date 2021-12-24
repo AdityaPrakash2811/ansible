@@ -1,0 +1,51 @@
+- hosts: servers
+  gather_facts: false
+  tasks:
+    - name: Assign Port
+      set_fact:
+        ansible_port: <your_default_ssh_port_to_connect_to_other_nodes>
+
+    - name: install firewalld
+      action: yum name=firewalld state=installed
+
+    - name: Enable firewalld on system reboot
+      service: name=firewalld enabled=yes
+
+    - name: Start service firewalld, if not started
+      service:
+        name: firewalld
+        state: started
+
+    - name: Add ports
+      firewalld:
+        permanent: yes
+        immediate: yes
+        port: "{{item.port}}/{{item.proto}}"
+        state: "{{item.state}}"
+        zone: "{{item.zone}}"
+      with_items:
+       - {port: "80", proto: "tcp", state: "enabled", zone: "public" }
+       - {port: "443", proto: "tcp", state: "enabled", zone: "public" }
+       - {port: "10050", proto: "tcp", state: "enabled", zone: "internal" }
+
+    - name: Add sources
+      firewalld:
+        permanent: yes
+        immediate: yes
+        source: "{{item.source}}"
+        state: "{{item.state}}"
+        zone: "{{item.zone}}"
+      with_items:
+        - {source: "<source you want>", state: "enabled", zone: "internal"}
+
+    - name: Add Rich Rules
+      firewalld:
+        permanent: yes
+        immediate: yes
+        rich_rule: "{{ item }}"
+        state: enabled
+      with_items:
+       - 'rule family="ipv4" source address="<reqd_address>" port port="<reqd_port>" protocol="tcp" accept'
+       - 'rule family="ipv4" source address="<reqd_address>" port port="<reqd_port>" protocol="tcp" accept'
+       - 'rule family="ipv4" source address="<reqd_address>" port port="<reqd_port>" protocol="tcp" accept'
+       - 'rule family="ipv4" source address="<reqd_address>" port port="<reqd_port>" protocol="tcp" accept'
